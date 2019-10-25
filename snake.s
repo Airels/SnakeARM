@@ -1,6 +1,9 @@
 .data
+gameSize:
+.int 0x28, 0x3c // A vérifier
 headPos:
-.int 
+.int 0xa, 0xa
+
 
 
 .text
@@ -11,9 +14,12 @@ headPos:
 .equ BLACK, 0x00000000		// BLACK COLOUR
 .equ HashTag, 0x2323
 .equ snakeHead, 0x4040 
+.equ snakeBody, 0x2b2b
 
 .global _start
 _start:
+    mov r12, #0
+    
 	// CLEAR SCREEN
 	ldr r0, =PIXBUF
     ldr r1, =BLACK
@@ -95,6 +101,7 @@ drawBorders:
             
         strh r3, [r0]
         add r0, #0x80
+        add r12, #1
         b drawLeftSideBorder
         
     drawRightSideBorder:
@@ -112,6 +119,9 @@ drawBorders:
         strh r3, [r0]
         add r0, #0x2
         b drawBottomBorder
+        
+drawCharacter: // Dessine un caractère en fonction de coordonnées et du caractère en paramètre
+
 
 mainLoop:
 	b .
