@@ -1,5 +1,5 @@
 .data
-bodyX:
+headPos:
 .int 
 
 
@@ -7,9 +7,10 @@ bodyX:
 .equ PIXBUF, 0xc8000000		// Pixel buffer
 .equ PIXBUFMAX, 0xc8040000  // Last Pixel
 .equ CHARBUF, 0xc9000000    // Char Buffer
-.equ LastChar, 0xc9001dc0    // LAST CHAR BUFFER
+.equ LastChar, 0xc9001dc0   // LAST CHAR BUFFER
 .equ BLACK, 0x00000000		// BLACK COLOUR
 .equ HashTag, 0x2323
+.equ snakeHead, 0x4040 
 
 .global _start
 _start:
