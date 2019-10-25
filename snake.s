@@ -9,7 +9,7 @@ bodyX:
 .equ CHARBUF, 0xc9000000    // Char Buffer
 .equ LastChar, 0xc9001dc0    // LAST CHAR BUFFER
 .equ BLACK, 0x00000000		// BLACK COLOUR
-.equ HashTag, 0x23232323
+.equ HashTag, 0x2323
 
 .global _start
 _start:
