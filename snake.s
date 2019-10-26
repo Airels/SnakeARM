@@ -17,11 +17,12 @@ headPos:
 .equ snakeBody, 0x2b2b
 .equ widthChar, 0x180 // Mémore réservé de 180 à 230 exclu
 .equ heightChar, 0x230 // Mémore réservé à partir de 230
+.equ direction, 0x600 // La direction : 0 -> haut, 1 -> gauche, 2 -> bas, 3 -> droit
+
 .global _start
 _start:
-    mov r12, #0
-    ldr r8, =0x180
-    ldr r9, =0x230
+    ldr r8, =widthChar
+    ldr r9, =heightChar
     
 	// CLEAR SCREEN
 	ldr r0, =PIXBUF
@@ -71,6 +72,7 @@ drawBorders:
     ldr r0, =CHARBUF
     ldr r3, =0x23
     ldr r1, =0xc9001d90 // LAST ONE
+    mov r2, #0
     bl drawLeftSideBorder
     
     ldr r0, =0xc900004e
@@ -89,7 +91,6 @@ drawBorders:
     ldr r3, =HashTag
     ldr r1, =0x50
     add r1, r0, r1
-    mov r2, #0
     bl drawBottomBorder
     
     pop {pc}
@@ -98,9 +99,10 @@ drawBorders:
     	cmp r0, r1
         	bxge lr
             
-        strh r3, [r0]
+        str r3, [r0]
+        str r0, [r9, r2] // Ecrit les adresses des Y
         add r0, #0x80
-        add r12, #1
+        add r2, #4
         b drawLeftSideBorder
         
     drawRightSideBorder:
@@ -126,24 +128,42 @@ drawBorders:
             bxge lr
 
         str r3, [r0]
-        str r0, [r9, r2]
         add r0, #0x4
-        add r2, #4
         b drawBottomBorder
-        
-drawCharacter: // Dessine un caractère en fonction de coordonnées et du caractère en paramètre
-	strh r5, [r0]
-    bx lr
 
 
 mainLoop:
 	// r8 et r9 réservés pour widthChar et heightChar
+    // r7 réservé pour la direction
+    
+    mov r0, #2	// X
+    mov r1, #2 	// Y
+    
+    mov r6, #4	// NE PAS TOUCHER (utilisé pour le décalage)
+    ldr r7, =direction
+    
+    
+    mul r0, r12
+    mul r1, r12
+    
     ldr r5, =snakeHead
-    ldr r0, [r8, #0x8]
+    ldr r0, [r8, r0]
+    ldr r1, [r9, r1]
+    sub r1, #0xc9000000
+    add r2, r0, r1
     
 	bl drawCharacter
 	b .
 
+
+inputController:
+	
+
+
+drawCharacter: // Dessine un caractère en fonction de coordonnées et du caractère en paramètre
+	str r5, [r2]
+    bx lr
+    
 
 gameover:
 
