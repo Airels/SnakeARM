@@ -12,13 +12,16 @@ headPos:
 .equ CHARBUF, 0xc9000000    // Char Buffer
 .equ LastChar, 0xc9001dc0   // LAST CHAR BUFFER
 .equ BLACK, 0x00000000		// BLACK COLOUR
-.equ HashTag, 0x2323
-.equ snakeHead, 0x4040 
+.equ HashTag, 0x23232323
+.equ snakeHead, 0x40 
 .equ snakeBody, 0x2b2b
-
+.equ widthChar, 0x180 // Mémore réservé de 180 à 230 exclu
+.equ heightChar, 0x230 // Mémore réservé à partir de 230
 .global _start
 _start:
     mov r12, #0
+    ldr r8, =0x180
+    ldr r9, =0x230
     
 	// CLEAR SCREEN
 	ldr r0, =PIXBUF
@@ -34,6 +37,8 @@ _start:
     bl clearCharacters
     
     bl drawBorders
+    
+    bl mainLoop
     b .
 
 clearScreen:
@@ -64,12 +69,12 @@ drawBorders:
 	push {lr}
     
     ldr r0, =CHARBUF
-    ldr r3, =HashTag
+    ldr r3, =0x23
     ldr r1, =0xc9001d90 // LAST ONE
     bl drawLeftSideBorder
     
     ldr r0, =0xc900004e
-    ldr r3, =HashTag
+    ldr r3, =0x2300
     ldr r1, =0xc9001dd0 // LAST ONE
     bl drawRightSideBorder
     
@@ -77,23 +82,17 @@ drawBorders:
     ldr r3, =HashTag
     ldr r1, =0x50
     add r1, r0, r1
+    mov r2, #0
    	bl drawUpperBorder
     
     ldr r0, =0xc9001d80
     ldr r3, =HashTag
     ldr r1, =0x50
     add r1, r0, r1
+    mov r2, #0
     bl drawBottomBorder
     
     pop {pc}
-
-	drawUpperBorder:
-        cmp r0, r1
-            bxge lr
-
-        strh r3, [r0]
-        add r0, #0x2
-        b drawUpperBorder
         
     drawLeftSideBorder:
     	cmp r0, r1
@@ -112,28 +111,38 @@ drawBorders:
         add r0, #0x80
         b drawRightSideBorder
         
+    drawUpperBorder:
+        cmp r0, r1
+            bxge lr
+
+        str r3, [r0]
+        str r0, [r8, r2] // Ecrit les adresses des X
+        add r0, #0x4
+        add r2, #4
+        b drawUpperBorder
+        
     drawBottomBorder:
     	cmp r0, r1
             bxge lr
 
-        strh r3, [r0]
-        add r0, #0x2
+        str r3, [r0]
+        str r0, [r9, r2]
+        add r0, #0x4
+        add r2, #4
         b drawBottomBorder
         
 drawCharacter: // Dessine un caractère en fonction de coordonnées et du caractère en paramètre
+	strh r5, [r0]
+    bx lr
 
 
 mainLoop:
+	// r8 et r9 réservés pour widthChar et heightChar
+    ldr r5, =snakeHead
+    ldr r0, [r8, #0x8]
+    
+	bl drawCharacter
 	b .
-
-
-nextStep:
-
-
-eat:
-
-
-draw:
 
 
 gameover:
