@@ -146,42 +146,50 @@ mainLoop:
 
 
 move:
-    cmp r0, #0x7a // HAUT
+	ldr r1, =0x807a
+    cmp r0, r1 // HAUT
     	beq up
-    cmp r0, #0x71 // GAUCHE
+        
+    ldr r1, =0x8071
+    cmp r0, r1 // GAUCHE
     	beq left
-    cmp r0, #0x73 // BAS
+        
+    ldr r1, =0x8073
+    cmp r0, r1 // BAS
     	beq down
-    cmp r0, #0x64 // DROITE
+        
+    ldr r1, =0x8064
+    cmp r0, r1 // DROITE
     	beq right
+   	// else
+   		b getch
     
     up:
     	
-    	b endMove
+    	b up
     left:
     	
-        b endMove
+        b left
     down:
     
-    	b endMove
+    	b down
     right:
     
-    	b endMove
+    	b right
     endMove:
         bl drawCharacter
         b loop
 
 
 getch:
-	// ldr r1, =UARTINOUT // A vérifier comment marche getch
-    // ldr r0, [r1]
+	ldr r1, =UARTINOUT
+    ldr r0, [r1]
     	
 	b move
 
 
 drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y)
-	// mul r0, r6
-    // mul r1, r6
+	push {r5, r10, r11}
     
     mov r10, #0
 	firstCalc: // POUR r0
@@ -233,6 +241,9 @@ drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y)
     add r2, r0, r1
     
 	str r5, [r2]
+    
+    pop {r5, r10, r11}
+    
     bx lr
     
 
