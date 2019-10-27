@@ -129,16 +129,18 @@ mainLoop:
 	// r8 et r9 réservés pour widthChar et heightChar
     // r7 réservé pour la direction
     
+    ldr r3, =snakeHead
     ldr r4, =headPos
-    ldr r5, =snakeHead
     mov r6, #4	// NE PAS TOUCHER (utilisé pour le décalage)
     ldr r7, =direction
 
-    mov r0, #10	// X
-    mov r1, #40 	// Y
+    mov r0, #10	// X SPAWN
+    mov r1, #5 // Y SPAWN
 
     str r0, [r4, #0]
     str r1, [r4, #4]
+    
+    bl drawCharacter
     
     loop:
         bl getch
@@ -165,18 +167,32 @@ move:
    		b getch
     
     up:
-    	
-    	b up
+    	ldr r0, [r4]
+        ldr r1, [r4, #4]
+        
+        sub r1, #1
+    	b endMove
     left:
-    	
-        b left
+    	ldr r0, [r4]
+        ldr r1, [r4, #4]
+        
+        sub r0, #1
+        b endMove
     down:
+    	ldr r0, [r4]
+        ldr r1, [r4, #4]
     
-    	b down
+    	add r1, #1
+    	b endMove
     right:
+    	ldr r0, [r4]
+        ldr r1, [r4, #4]
     
-    	b right
+    	add r0, #1
+    	b endMove
     endMove:
+    	str r0, [r4]
+        str r1, [r4, #4]
         bl drawCharacter
         b loop
 
@@ -189,24 +205,24 @@ getch:
 
 
 drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y)
-	push {r5, r10, r11}
+	push {r10, r11}
     
+    ldr r3, =snakeHead
     mov r10, #0
 	firstCalc: // POUR r0
         cmp r0, #0
-            ldreq r5, =snakeHead
             beq endFirstCalc
         cmp r0, #1
         	moveq r12, #0x100
-            muleq r5, r5, r12
+            muleq r3, r3, r12
             beq endFirstCalc
         cmp r0, #2
         	moveq r12, #0x10000
-            muleq r5, r5, r12
+            muleq r3, r3, r12
             beq endFirstCalc
         cmp r0, #3
             moveq r12, #0x1000000
-            muleq r5, r5, r12
+            muleq r3, r3, r12
             beq endFirstCalc
         // else
             sub r0, #4
@@ -214,35 +230,16 @@ drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y)
             b firstCalc       
     endFirstCalc:
     
-    mov r11, #0
-    secondCalc: // POUR r1
-    	cmp r1, #0
-        	beq endSecondCalc
-        cmp r1, #1
-            subeq r1, r1, #1
-            beq endSecondCalc
-        cmp r1, #2
-            subeq r1, r1, #2
-            beq endSecondCalc
-        cmp r1, #3
-            subeq r1, r1, #3
-            beq endSecondCalc
-        // else
-            sub r1, #4
-            add r11, #4
-            b secondCalc       
-    endSecondCalc:
-    
-    mul r1, r6
+    mul r1, r1, r6
 	
     ldr r0, [r8, r10]
-    ldr r1, [r9, r11]
+    ldr r1, [r9, r1]
     sub r1, #0xc9000000
     add r2, r0, r1
     
-	str r5, [r2]
+	str r3, [r2]
     
-    pop {r5, r10, r11}
+    pop {r10, r11}
     
     bx lr
     
