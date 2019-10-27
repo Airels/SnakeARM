@@ -8,7 +8,6 @@
 .equ snakeBody, 0x2b2b
 .equ widthChar, 0x100000 // Mémore résvé pour les adresses en X
 .equ heightChar, 0x101000 // Mémore réservé pour les adresses en Y
-.equ direction, 0x5000 // La direction : 0 -> haut, 1 -> gauche, 2 -> bas, 3 -> droit
 .equ UARTINOUT, 0xff201000
 .equ headPos, 0x800
 
@@ -34,6 +33,7 @@ _start:
     
     bl mainLoop
     b .
+    
 
 clearScreen:
 	cmp r0, r2
@@ -42,6 +42,7 @@ clearScreen:
     strh r1, [r0]
     add r0, #0x2
     b clearScreen
+    
 
 clearCharacters:
 	cmp r0, r2
@@ -132,7 +133,6 @@ mainLoop:
     ldr r3, =snakeHead
     ldr r4, =headPos
     mov r6, #4	// NE PAS TOUCHER (utilisé pour le décalage)
-    ldr r7, =direction
 
     mov r0, #10	// X SPAWN
     mov r1, #5 // Y SPAWN
@@ -150,18 +150,22 @@ mainLoop:
 move:
 	ldr r1, =0x807a
     cmp r0, r1 // HAUT
+    	bleq clrChar
     	beq up
         
     ldr r1, =0x8071
     cmp r0, r1 // GAUCHE
+    	bleq clrChar
     	beq left
         
     ldr r1, =0x8073
     cmp r0, r1 // BAS
+    	bleq clrChar
     	beq down
         
     ldr r1, =0x8064
     cmp r0, r1 // DROITE
+    	bleq clrChar
     	beq right
    	// else
    		b getch
@@ -193,6 +197,7 @@ move:
     endMove:
     	str r0, [r4]
         str r1, [r4, #4]
+        ldr r3, =snakeHead
         bl drawCharacter
         b loop
 
@@ -202,12 +207,23 @@ getch:
     ldr r0, [r1]
     	
 	b move
-
+    
+    
+clrChar:
+	push {lr}
+    
+    ldr r3, =0x00
+    ldr r0, [r4]
+    ldr r1, [r4, #0x4]
+    
+    bl drawCharacter
+    
+    pop {pc}
+    
 
 drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y)
 	push {r10, r11}
     
-    ldr r3, =snakeHead
     mov r10, #0
 	firstCalc: // POUR r0
         cmp r0, #0
