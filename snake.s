@@ -6,8 +6,8 @@
 .equ HashTag, 0x23232323
 .equ snakeHead, 0x40 
 .equ snakeBody, 0x2b2b
-.equ widthChar, 0x10000 // Mémore résvé pour les adresses en X
-.equ heightChar, 0x10300 // Mémore réservé pour les adresses en Y
+.equ widthChar, 0x100000 // Mémore résvé pour les adresses en X
+.equ heightChar, 0x101000 // Mémore réservé pour les adresses en Y
 .equ direction, 0x5000 // La direction : 0 -> haut, 1 -> gauche, 2 -> bas, 3 -> droit
 .equ UARTINOUT, 0xff201000
 .equ headPos, 0x800
@@ -63,13 +63,13 @@ drawBorders:
 	push {lr}
     
     ldr r0, =CHARBUF
-    ldr r3, =0x23
+    ldr r3, =0x23232323
     ldr r1, =0xc9001d90 // LAST ONE
     mov r2, #0
     bl drawLeftSideBorder
     
     ldr r0, =0xc900004e
-    ldr r3, =0x2300
+    ldr r3, =0x23232323
     ldr r1, =0xc9001dd0 // LAST ONE
     bl drawRightSideBorder
     
@@ -134,8 +134,8 @@ mainLoop:
     mov r6, #4	// NE PAS TOUCHER (utilisé pour le décalage)
     ldr r7, =direction
 
-    mov r0, #2	// X
-    mov r1, #6 	// Y
+    mov r0, #10	// X
+    mov r1, #40 	// Y
 
     str r0, [r4, #0]
     str r1, [r4, #4]
@@ -173,18 +173,62 @@ move:
 
 
 getch:
-	ldr r1, =UARTINOUT // A vérifier comment marche getch
-    ldr r0, [r1]
+	// ldr r1, =UARTINOUT // A vérifier comment marche getch
+    // ldr r0, [r1]
     	
 	b move
 
 
 drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y)
-	mul r0, r6
+	// mul r0, r6
+    // mul r1, r6
+    
+    mov r10, #0
+	firstCalc: // POUR r0
+        cmp r0, #0
+            ldreq r5, =snakeHead
+            beq endFirstCalc
+        cmp r0, #1
+        	moveq r12, #0x100
+            muleq r5, r5, r12
+            beq endFirstCalc
+        cmp r0, #2
+        	moveq r12, #0x10000
+            muleq r5, r5, r12
+            beq endFirstCalc
+        cmp r0, #3
+            moveq r12, #0x1000000
+            muleq r5, r5, r12
+            beq endFirstCalc
+        // else
+            sub r0, #4
+            add r10, #4
+            b firstCalc       
+    endFirstCalc:
+    
+    mov r11, #0
+    secondCalc: // POUR r1
+    	cmp r1, #0
+        	beq endSecondCalc
+        cmp r1, #1
+            subeq r1, r1, #1
+            beq endSecondCalc
+        cmp r1, #2
+            subeq r1, r1, #2
+            beq endSecondCalc
+        cmp r1, #3
+            subeq r1, r1, #3
+            beq endSecondCalc
+        // else
+            sub r1, #4
+            add r11, #4
+            b secondCalc       
+    endSecondCalc:
+    
     mul r1, r6
-
-    ldr r0, [r8, r0]
-    ldr r1, [r9, r1]
+	
+    ldr r0, [r8, r10]
+    ldr r1, [r9, r11]
     sub r1, #0xc9000000
     add r2, r0, r1
     
