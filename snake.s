@@ -11,6 +11,7 @@
 .equ UARTINOUT, 0xff201000
 .equ headPos, 0x102000
 .equ bodyPos, 0x103000
+.equ bodySize, 0x110000
 
 .global _start
 _start:
@@ -130,6 +131,11 @@ drawBorders:
 mainLoop:
 	// r8 et r9 réservés pour widthChar et heightChar
     // r7 réservé pour la direction
+    
+    add r0, #0
+    ldr r1, =bodySize
+    str r0, [r1]
+    
     
     ldr r4, =headPos
     ldr r5, =bodyPos
@@ -253,7 +259,7 @@ clrChar:
     pop {r0, r1, r2, r4, pc}
     
 
-drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y)
+drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y) et r3 le caractère à écrire
 	push {r10, r11}
     
     mov r10, #0
@@ -289,6 +295,7 @@ drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y)
    	ldr r1, [r2]
     add r3, r1, r3
 	str r3, [r2]
+        
     
     pop {r10, r11}
     
