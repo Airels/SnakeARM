@@ -5,11 +5,12 @@
 .equ LastChar, 0xc9001dc0   // LAST CHAR BUFFER
 .equ HashTag, 0x23232323
 .equ snakeHead, 0x40 
-.equ snakeBody, 0x2b2b
+.equ snakeBody, 0x2b
 .equ widthChar, 0x100000 // Mémore résvé pour les adresses en X
 .equ heightChar, 0x101000 // Mémore réservé pour les adresses en Y
 .equ UARTINOUT, 0xff201000
-.equ headPos, 0x800
+.equ headPos, 0x102000
+.equ bodyPos, 0x103000
 
 .global _start
 _start:
@@ -130,8 +131,8 @@ mainLoop:
 	// r8 et r9 réservés pour widthChar et heightChar
     // r7 réservé pour la direction
     
-    ldr r3, =snakeHead
     ldr r4, =headPos
+    ldr r5, =bodyPos
     mov r6, #4	// NE PAS TOUCHER (utilisé pour le décalage)
 
     mov r0, #10	// X SPAWN
@@ -140,6 +141,35 @@ mainLoop:
     str r0, [r4, #0]
     str r1, [r4, #4]
     
+    ldr r3, =snakeHead
+    bl drawCharacter
+    
+    
+    mov r0, #9
+    mov r1, #5
+    
+    str r0, [r5, #0]
+    str r1, [r5, #4]
+    
+    ldr r3, =snakeBody
+    bl drawCharacter
+    
+    mov r0, #8
+    mov r1, #5
+    
+    str r0, [r5, #0]
+    str r1, [r5, #4]
+    
+    ldr r3, =snakeBody
+    bl drawCharacter
+    
+    mov r0, #7
+    mov r1, #5
+    
+    str r0, [r5, #0]
+    str r1, [r5, #4]
+    
+    ldr r3, =snakeBody
     bl drawCharacter
     
     loop:
@@ -210,15 +240,17 @@ getch:
     
     
 clrChar:
-	push {lr}
+	push {r0, r1, r2, r4, lr}
     
-    ldr r3, =0x00
-    ldr r0, [r4]
-    ldr r1, [r4, #0x4]
+    ldr r0, =CHARBUF
+    ldr r4, =0x00
+    ldr r1, =0x50
+    ldr r2, =LastChar
+    bl clearCharacters
     
-    bl drawCharacter
+    bl drawBorders
     
-    pop {pc}
+    pop {r0, r1, r2, r4, pc}
     
 
 drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y)
@@ -253,6 +285,9 @@ drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y)
     sub r1, #0xc9000000
     add r2, r0, r1
     
+    
+   	ldr r1, [r2]
+    add r3, r1, r3
 	str r3, [r2]
     
     pop {r10, r11}
