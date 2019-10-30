@@ -132,11 +132,6 @@ mainLoop:
 	// r8 et r9 réservés pour widthChar et heightChar
     // r7 réservé pour la direction
     
-    add r0, #0
-    ldr r1, =bodySize
-    str r0, [r1]
-    
-    
     ldr r4, =headPos
     ldr r5, =bodyPos
     mov r6, #4	// NE PAS TOUCHER (utilisé pour le décalage)
@@ -163,8 +158,8 @@ mainLoop:
     mov r0, #8
     mov r1, #5
     
-    str r0, [r5, #0]
-    str r1, [r5, #4]
+    str r0, [r5, #8]
+    str r1, [r5, #12]
     
     ldr r3, =snakeBody
     bl drawCharacter
@@ -172,11 +167,15 @@ mainLoop:
     mov r0, #7
     mov r1, #5
     
-    str r0, [r5, #0]
-    str r1, [r5, #4]
+    str r0, [r5, #16]
+    str r1, [r5, #20]
     
     ldr r3, =snakeBody
     bl drawCharacter
+    
+    mov r0, #3
+    ldr r1, =bodySize
+    str r0, [r1]
     
     loop:
         bl getch
@@ -235,6 +234,7 @@ move:
         str r1, [r4, #4]
         ldr r3, =snakeHead
         bl drawCharacter
+        bl drawBody
         b loop
 
 
@@ -244,6 +244,18 @@ getch:
     	
 	b move
     
+    
+drawBody:
+	push {r10, r11}
+    
+    ldr r10, =bodySize
+    ldr r10, [r10] // Nombre d'intérations à effectuer
+   	
+    cmp r10, #0
+    	popeq {r10, r11}
+    	bxeq lr
+    
+	b drawBody
     
 clrChar:
 	push {r0, r1, r2, r4, lr}
