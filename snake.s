@@ -133,7 +133,9 @@ drawBorders: // DESSINE LES BORDURES
         b drawBottomBorder
 
 
-mainLoop:    
+mainLoop:
+	
+    // INIT
     ldr r4, =headPos
     ldr r5, =bodyPos
     mov r6, #4	// NE PAS TOUCHER (utilisé pour le décalage)
@@ -188,7 +190,17 @@ mainLoop:
     ldr r1, =bodySize
     str r0, [r1]
     ldr r5, =bodyPos
+    
+    mov r11, #0
+    // END INIT
+    
     loop:
+    	// r11 utilisé comme valeur aléatoire
+        ldr r0, =0x3333
+    	cmp r11, r0
+        movge r11, #0
+        add r11, #1
+        
     	bl canEat
         b getch
         
@@ -204,13 +216,39 @@ canEat:
     cmpeq r1, r3
     bleq eat
     pop {r5, pc}
+    b loop
 
 eat:
+	// Grandit le serpent de 1
 	ldr r3, =bodySize
     ldr r2, [r3]
     add r2, #1
     str r2, [r3]
-	bx lr
+    
+    // Affiche nouvelle pomme
+    mov r0, r11
+    mov r1, r11
+    lsl r0, #24
+    lsr r0, #24
+    lsr r1, #8
+    
+    // Teste si la pomme n'est pas dans les bordures
+    cmp r0, #4
+    	movlt r0, #4
+    cmp r0, #0x4d
+    	movgt r0, #0x4d
+    cmp r1, #1
+    	movlt r1, #1
+    cmp r1, #0x3a
+    	movgt r1, #0x3a
+        
+    str r0, [r5]
+    str r1, [r5, #4]
+    
+    push {r3, lr}
+    ldr r3, =apple
+    bl drawCharacter
+    pop {r3, pc}
 
 getch:
 	ldr r1, =UARTINOUT
@@ -239,7 +277,7 @@ move: // CALCUL PROCHAINE POSITION
     	bleq clrChar
     	beq right
    	// else
-   		b getch
+   		b loop
     
     up:
     	ldr r0, [r4]
