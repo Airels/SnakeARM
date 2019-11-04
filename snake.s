@@ -227,7 +227,9 @@ move:
     	add r0, #1
     	b endMove
     endMove:
+    	push {r0, r1, r3}
     	bl drawBody
+        pop {r0, r1, r3}
         
     	str r0, [r4]
         str r1, [r4, #4]
