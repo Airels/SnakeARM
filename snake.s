@@ -159,16 +159,15 @@ mainLoop:
     mov r1, #5
     
     str r0, [r5, #8]
-    str r1, [r5, #12]
+    str r1, [r5, #0xc]
     
     ldr r3, =snakeBody
     bl drawCharacter
     
     mov r0, #7
     mov r1, #5
-    
-    str r0, [r5, #16]
-    str r1, [r5, #20]
+    str r0, [r5, #0x10]
+    str r1, [r5, #0x14]
     
     ldr r3, =snakeBody
     bl drawCharacter
@@ -176,7 +175,6 @@ mainLoop:
     mov r0, #3
     ldr r1, =bodySize
     str r0, [r1]
-    
     loop:
         bl getch
         b .
@@ -220,7 +218,6 @@ move:
     down:
     	ldr r0, [r4]
         ldr r1, [r4, #4]
-    
     	add r1, #1
     	b endMove
     right:
@@ -230,13 +227,13 @@ move:
     	add r0, #1
     	b endMove
     endMove:
+    	bl drawBody
+        
     	str r0, [r4]
         str r1, [r4, #4]
         ldr r3, =snakeHead
         bl drawCharacter
-        bl drawBody
         b loop
-
 
 getch:
 	ldr r1, =UARTINOUT
@@ -246,16 +243,49 @@ getch:
     
     
 drawBody:
-	push {r10, r11}
+	push {r8, r9, r10, r11, r12}103000
+    
+    mov r11, #4
     
     ldr r10, =bodySize
     ldr r10, [r10] // Nombre d'intérations à effectuer
-   	
-    cmp r10, #0
-    	popeq {r10, r11}
-    	bxeq lr
+    add r10, r10 
+    sub r10, #1
     
-	b drawBody
+    mul r10, r10, r11
+    
+    ldr r8, =0x103008
+    
+    ldr r11, =bodyPos
+    add r10, r11, r10
+    
+    ldr r12, =headPos
+    add r12, #4
+    
+    loopDrawBody:
+        cmp r10, r11
+            poplt {r8, r9, r10, r11, r12}
+            bxlt lr
+        
+        cmp r10, r8
+        	blt firstDrawBodyElement
+        
+        mov r0, r10
+        sub r9, r10, #8
+        ldr r1, [r9]
+        str r1, [r0]
+        
+        sub r10, #4
+        b loopDrawBody
+    firstDrawBodyElement:
+    	mov r0, r10
+        ldr r1, [r12]
+        str r1, [r0]
+        
+        sub r10, #4
+        sub r12, #4
+        b loopDrawBody
+        
     
 clrChar:
 	push {r0, r1, r2, r4, lr}
