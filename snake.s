@@ -6,12 +6,15 @@
 .equ HashTag, 0x23232323
 .equ snakeHead, 0x40 
 .equ snakeBody, 0x2b
-.equ widthChar, 0x100000 // Mémore résvé pour les adresses en X
+.equ widthChar, 0x100000 // Mémore réservé pour les adresses en X
 .equ heightChar, 0x101000 // Mémore réservé pour les adresses en Y
 .equ UARTINOUT, 0xff201000
-.equ headPos, 0x102000
-.equ bodyPos, 0x103000
-.equ bodySize, 0x110000
+.equ headPos, 0x102000 // Mémoire réservé pour la position de la tête
+.equ bodyPos, 0x103000 // Mémoire réservé pour la position du corps
+.equ bodySize, 0x110000 // Mémoire réservé pour la taille du corps
+
+// On a préféré définir nous-mêmes les adresses car quand l'émulateur les choississait, cela créait des conflits
+// Avant de run l'émulation, désactiver le debugging check "Function nesting too deep"
 
 .global _start
 _start:
@@ -37,7 +40,7 @@ _start:
     b .
     
 
-clearScreen:
+clearScreen: // SUPPRIME LES COULEURS ALEATOIRES DU VGA PIXEL BUFFER
 	cmp r0, r2
     	bxge lr
         
@@ -46,7 +49,7 @@ clearScreen:
     b clearScreen
     
 
-clearCharacters:
+clearCharacters: // SUPPRIME TOUT LES CARACTERES
 	cmp r0, r2
     	bxgt lr
     
@@ -62,7 +65,7 @@ clearCharacters:
         b loop1
     	
     
-drawBorders:
+drawBorders: // DESSINE LES BORDURES
 	push {lr}
     
     ldr r0, =CHARBUF
@@ -128,16 +131,13 @@ drawBorders:
         b drawBottomBorder
 
 
-mainLoop:
-	// r8 et r9 réservés pour widthChar et heightChar
-    // r7 réservé pour la direction
-    
+mainLoop:    
     ldr r4, =headPos
     ldr r5, =bodyPos
     mov r6, #4	// NE PAS TOUCHER (utilisé pour le décalage)
 
-    mov r0, #10	// X SPAWN
-    mov r1, #5 // Y SPAWN
+    mov r0, #10	// X SPAWN TÊTE
+    mov r1, #5 // Y SPAWN TÊTE
 
     str r0, [r4, #0]
     str r1, [r4, #4]
@@ -180,7 +180,7 @@ mainLoop:
         b .
 
 
-move:
+move: // CALCUL PROCHAINE POSITION
 	ldr r1, =0x807a
     cmp r0, r1 // HAUT
     	bleq clrChar
@@ -228,12 +228,12 @@ move:
     	b endMove
     endMove:
     	push {r0, r1, r3}
-    	bl drawBody
+    	bl drawBody // CALCUL ET AFFICHAGE NOUVEAU CORPS
         pop {r0, r1, r3}
         
     	str r0, [r4]
         str r1, [r4, #4]
-        ldr r3, =snakeHead
+        ldr r3, =snakeHead // AFFICHE LA TÊTE
         bl drawCharacter
         b loop
 
@@ -244,7 +244,7 @@ getch:
 	b move
     
     
-drawBody:
+drawBody: // CALCUL ET AFFICHAGE NOUVEAU CORPS
 	push {r8, r9, r10, r11, r12, lr}
     
     mov r11, #4
@@ -264,7 +264,7 @@ drawBody:
     ldr r12, =headPos
     add r12, #4
     
-    loopDrawBody:
+    loopDrawBody: // CALCUL NOUVEAU CORPS
         cmp r10, r11
             blt callDrawElement
         
@@ -278,7 +278,7 @@ drawBody:
         
         sub r10, #4
         b loopDrawBody
-    firstDrawBodyElement:
+    firstDrawBodyElement: // CALCUL PREMIER ELEMENT DU CORPS
     	mov r0, r10
         ldr r1, [r12]
         str r1, [r0]
@@ -287,7 +287,7 @@ drawBody:
         sub r12, #4
         b loopDrawBody
     
-	callDrawElement:
+	callDrawElement: // AFFICHAGE DU CORPS
     	ldr r10, =bodySize
         ldr r10, [r10]
         mov r2, #0
@@ -310,7 +310,7 @@ drawBody:
             ldr r0, [r0]
             ldr r1, [r1]
             
-            push {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
+            push {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr} // Redondant
             bl drawCharacter
             pop {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
             
@@ -319,7 +319,7 @@ drawBody:
             b loopCallDrawElement
         
     
-clrChar:
+clrChar: // SUPPRIME LES CARACTERES
 	push {r0, r1, r2, r4, lr}
     
     ldr r0, =CHARBUF
@@ -340,26 +340,26 @@ drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y) et r3 le
     ldr r9, =heightChar
     
     mov r10, #0
-	firstCalc: // POUR r0
+	calc: // POUR r0 (X)
         cmp r0, #0
-            beq endFirstCalc
+            beq endCalc
         cmp r0, #1
         	moveq r12, #0x100
             muleq r3, r3, r12
-            beq endFirstCalc
+            beq endCalc
         cmp r0, #2
         	moveq r12, #0x10000
             muleq r3, r3, r12
-            beq endFirstCalc
+            beq endCalc
         cmp r0, #3
             moveq r12, #0x1000000
             muleq r3, r3, r12
-            beq endFirstCalc
+            beq endCalc
         // else
             sub r0, #4
             add r10, #4
-            b firstCalc       
-    endFirstCalc:
+            b calc       
+    endCalc:
     
     mul r1, r1, r6
 	
@@ -368,11 +368,9 @@ drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y) et r3 le
     sub r1, #0xc9000000
     add r2, r0, r1
     
-    
    	ldr r1, [r2]
     add r3, r1, r3
-	str r3, [r2]
-        
+	str r3, [r2]  // DESSINE LE CARACTERE    
     
     pop {r8, r9, r10}
     
