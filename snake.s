@@ -307,6 +307,16 @@ move: // CALCUL PROCHAINE POSITION
     	bl drawBody // CALCUL ET AFFICHAGE NOUVEAU CORPS
         pop {r0, r1, r3}
         
+        // TESTE SI LA TÊTE N'EST PAS DANS LES BORDURES
+        cmp r0, #4
+            blt gameover
+        cmp r0, #0x4d
+            bgt gameover
+        cmp r1, #1
+            blt gameover
+        cmp r1, #0x3a
+            bgt gameover
+        
     	str r0, [r4]
         str r1, [r4, #4]
         ldr r3, =snakeHead // AFFICHE LA TÊTE
@@ -457,5 +467,59 @@ drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y) et r3 le
     
 
 gameover:
-
+    bl clrChar
+    
+    // AFFICHE GAME OVER
+    mov r1, #8
+    
+    mov r0, #10
+    ldr r3, =0x47
+    push {r0, r1}
+    bl drawCharacter
+    pop {r0, r1}
+    
+    add r0, #1
+    ldr r3, =0x61
+    push {r0, r1}
+    bl drawCharacter
+    pop {r0, r1}
+    
+    add r0, #1
+    ldr r3, =0x6d
+    push {r0, r1}
+    bl drawCharacter
+    pop {r0, r1}
+    
+    add r0, #1
+    ldr r3, =0x65
+    push {r0, r1}
+    bl drawCharacter
+    pop {r0, r1}
+    
+    // ESPACE
+    
+    add r0, #2
+    ldr r3, =0x4f
+    push {r0, r1}
+    bl drawCharacter
+    pop {r0, r1}
+    
+    add r0, #1
+    ldr r3, =0x76
+    push {r0, r1}
+    bl drawCharacter
+    pop {r0, r1}
+    
+    add r0, #1
+    ldr r3, =0x65
+    push {r0, r1}
+    bl drawCharacter
+    pop {r0, r1}
+    
+    add r0, #1
+    ldr r3, =0x72
+    push {r0, r1}
+    bl drawCharacter
+    pop {r0, r1}
+    
 	b .
