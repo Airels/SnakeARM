@@ -4,13 +4,15 @@
 .equ CHARBUF, 0xc9000000    // Char Buffer
 .equ LastChar, 0xc9001dc0   // LAST CHAR BUFFER
 .equ HashTag, 0x23232323
-.equ snakeHead, 0x40 
-.equ snakeBody, 0x2b
+.equ snakeHead, 0x40 // Caractère tête (@)
+.equ snakeBody, 0x2b // Caractère corps (+)
+.equ apple, 0x30 // Caractère pomme (0)
 .equ widthChar, 0x100000 // Mémore réservé pour les adresses en X
 .equ heightChar, 0x101000 // Mémore réservé pour les adresses en Y
 .equ UARTINOUT, 0xff201000
 .equ headPos, 0x102000 // Mémoire réservé pour la position de la tête
 .equ bodyPos, 0x103000 // Mémoire réservé pour la position du corps
+.equ applePos, 0x104000 // Mémoire réservé pour la position de la pomme
 .equ bodySize, 0x110000 // Mémoire réservé pour la taille du corps
 
 // On a préféré définir nous-mêmes les adresses car quand l'émulateur les choississait, cela créait des conflits
@@ -145,7 +147,7 @@ mainLoop:
     ldr r3, =snakeHead
     bl drawCharacter
     
-    
+    // Spawn corps
     mov r0, #9
     mov r1, #5
     
@@ -172,13 +174,49 @@ mainLoop:
     ldr r3, =snakeBody
     bl drawCharacter
     
+    
+    ldr r5, =applePos
+    mov r0, #15
+    mov r1, #7
+    str r0, [r5]
+    str r1, [r5, #4]
+    
+    ldr r3, =apple
+    bl drawCharacter
+    
     mov r0, #3
     ldr r1, =bodySize
     str r0, [r1]
+    ldr r5, =bodyPos
     loop:
-        bl getch
-        b .
+    	bl canEat
+        b getch
+        
+canEat:
+	push {r5, lr}
+    ldr r5, =applePos
+    ldr r0, [r4] // Tête X
+    ldr r1, [r4, #4] // Tête Y
+    ldr r2, [r5] // Pomme X
+    ldr r3, [r5, #4] // Pomme Y
+    
+    cmp r0, r2
+    cmpeq r1, r3
+    bleq eat
+    pop {r5, pc}
 
+eat:
+	ldr r3, =bodySize
+    ldr r2, [r3]
+    add r2, #1
+    str r2, [r3]
+	bx lr
+
+getch:
+	ldr r1, =UARTINOUT
+    ldr r0, [r1]
+    	
+	b move
 
 move: // CALCUL PROCHAINE POSITION
 	ldr r1, =0x807a
@@ -235,13 +273,16 @@ move: // CALCUL PROCHAINE POSITION
         str r1, [r4, #4]
         ldr r3, =snakeHead // AFFICHE LA TÊTE
         bl drawCharacter
+        
+        // AFFICHE LA POMME
+        push {r5}
+        ldr r5, =applePos
+        ldr r0, [r5]
+        ldr r1, [r5, #4]
+        ldr r3, =apple
+        bl drawCharacter
+        pop {r5}
         b loop
-
-getch:
-	ldr r1, =UARTINOUT
-    ldr r0, [r1]
-    	
-	b move
     
     
 drawBody: // CALCUL ET AFFICHAGE NOUVEAU CORPS
