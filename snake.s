@@ -243,7 +243,7 @@ getch:
     
     
 drawBody:
-	push {r8, r9, r10, r11, r12}103000
+	push {r8, r9, r10, r11, r12, lr}
     
     mov r11, #4
     
@@ -264,8 +264,7 @@ drawBody:
     
     loopDrawBody:
         cmp r10, r11
-            poplt {r8, r9, r10, r11, r12}
-            bxlt lr
+            blt callDrawElement
         
         cmp r10, r8
         	blt firstDrawBodyElement
@@ -285,6 +284,37 @@ drawBody:
         sub r10, #4
         sub r12, #4
         b loopDrawBody
+    
+	callDrawElement:
+    	ldr r10, =bodySize
+        ldr r10, [r10]
+        mov r2, #0
+        ldr r3, =snakeBody
+        
+        loopCallDrawElement:
+        	cmp r2, r10
+            	popge {r8, r9, r10, r11, r12, lr}
+                bxge lr
+                
+            mov r0, #8
+            mov r1, #8
+            mul r0, r0, r2
+            mul r1, r1, r2
+            add r1, #4
+            
+            add r0, r11, r0
+            add r1, r11, r1
+            
+            ldr r0, [r0]
+            ldr r1, [r1]
+            
+            push {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
+            bl drawCharacter
+            pop {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
+            
+            add r2, #1
+            
+            b loopCallDrawElement
         
     
 clrChar:
@@ -302,7 +332,10 @@ clrChar:
     
 
 drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y) et r3 le caractère à écrire
-	push {r10, r11}
+	push {r8, r9, r10}
+    
+    ldr r8, =widthChar
+    ldr r9, =heightChar
     
     mov r10, #0
 	firstCalc: // POUR r0
@@ -339,7 +372,7 @@ drawCharacter: // Dessine un caractère en fonction de r0 (X) et r1 (Y) et r3 le
 	str r3, [r2]
         
     
-    pop {r10, r11}
+    pop {r8, r9, r10}
     
     bx lr
     
