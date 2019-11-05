@@ -195,10 +195,16 @@ mainLoop:
     // END INIT
     
     loop:
-    	// r11 utilisé comme valeur aléatoire
-        ldr r0, =0x3333
+    	// r11 utilisé comme valeur aléatoire pour la position de la pomme
+        ldr r0, =0x4422 // Graine de la génération aléatoire des pommes
     	cmp r11, r0
-        movge r11, #0
+            movge r11, #0
+        lsl r0, #24
+    	lsr r0, #24
+        cmp r11, r0
+            addge r11, #0x100
+            lsrge r1, #8
+            lslge r1, #8
         add r11, #1
         
     	bl canEat
@@ -225,7 +231,7 @@ eat:
     add r2, #1
     str r2, [r3]
     
-    // Affiche nouvelle pomme
+    // Affiche nouvelle pomme selon des valeurs aléatoires
     mov r0, r11
     mov r1, r11
     lsl r0, #24
